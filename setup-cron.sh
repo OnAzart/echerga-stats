@@ -81,7 +81,7 @@ read -p "Do you want to test the Docker container now? (y/N): " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Running test..."
-    docker run --rm --env-file "$SCRIPT_DIR/.env" echerga-stats
+    docker run --rm --env-file "$SCRIPT_DIR/.env"  --dns 8.8.8.8 echerga-stats
     echo ""
     echo "✓ Test completed!"
 fi

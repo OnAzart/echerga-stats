@@ -70,8 +70,8 @@ def get_supabase_client() -> Client:
 
 
 
-def upsert_checkpoints(supabase: Client, data: List[Dict[str, Any]]) -> int:
-    """Upsert checkpoint data (static fields)."""
+def upsert_checkpoints(supabase: Client, data: List[Dict[str, Any]], max_retries: int = 3) -> int:
+    """Upsert checkpoint data (static fields) with retry logic."""
     checkpoints = []
 
     for item in data:
@@ -87,16 +87,24 @@ def upsert_checkpoints(supabase: Client, data: List[Dict[str, Any]]) -> int:
         }
         checkpoints.append(checkpoint)
 
-    try:
-        response = supabase.table("checkpoints").upsert(
-            checkpoints,
-            on_conflict="id"
-        ).execute()
-        print(f"✓ Upserted {len(checkpoints)} checkpoints")
-        return len(checkpoints)
-    except Exception as e:
-        print(f"Error upserting checkpoints: {e}")
-        sys.exit(1)
+    for attempt in range(max_retries):
+        try:
+            response = supabase.table("checkpoints").upsert(
+                checkpoints,
+                on_conflict="id"
+            ).execute()
+            print(f"✓ Upserted {len(checkpoints)} checkpoints")
+            return len(checkpoints)
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 2
+                print(f"Retry {attempt + 1}/{max_retries} after {wait_time}s due to: {e}")
+                time.sleep(wait_time)
+            else:
+                print(f"Error upserting checkpoints after {max_retries} attempts: {e}")
+                import traceback
+                traceback.print_exc()
+                sys.exit(1)
 
 
 def insert_queue_measurements(supabase: Client, data: List[Dict[str, Any]], measured_at: datetime) -> int:
@@ -138,7 +146,6 @@ def main():
     # Load data
     print(f"Loading data from {snapshot_file}...")
     json_data = load_json_data(snapshot_file)
-    print(json_data)
 
     if "data" not in json_data:
         print("Error: JSON file does not contain 'data' field")
