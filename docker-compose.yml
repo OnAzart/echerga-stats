@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # ETL Service - runs via cron on host
+  etl:
+    build: ./etl
+    container_name: echerga-etl
+    env_file:
+      - ./etl/.env
+    restart: "no"  # Triggered by cron
+
+  # Dashboard Service - always running
+  dashboard:
+    build: ./dashboard
+    container_name: echerga-dashboard
+    env_file:
+      - ./dashboard/.env
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
