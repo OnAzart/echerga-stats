@@ -34,8 +34,8 @@ def get_checkpoints():
     """Get all checkpoints"""
     try:
         response = supabase.table('checkpoints').select(
-            'id, title, country_id, lng, lat'
-        ).execute()
+            'id, title, country_id, lng, lat, order_id'
+        ).order('order_id', desc=False, nullsfirst=False).order('title', desc=True).execute()
         return jsonify(response.data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

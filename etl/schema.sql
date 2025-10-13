@@ -39,10 +39,9 @@ CREATE TABLE IF NOT EXISTS queue_measurements (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create index for efficient time-based queries
-CREATE INDEX IF NOT EXISTS idx_queue_measurements_checkpoint_id ON queue_measurements(checkpoint_id);
-CREATE INDEX IF NOT EXISTS idx_queue_measurements_created_at ON queue_measurements(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_queue_measurements_checkpoint_measured ON queue_measurements(checkpoint_id, created_at DESC);
+-- Create composite index for efficient queries
+-- This covers: checkpoint_id lookups, time-based queries, and combined queries
+CREATE INDEX IF NOT EXISTS idx_queue_measurements_checkpoint_created ON queue_measurements(checkpoint_id, created_at DESC);
 
 -- Create a function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
