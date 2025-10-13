@@ -108,9 +108,9 @@ read -p "Do you want to start the dashboard now? (y/N): " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Starting dashboard..."
-    docker run -d --name echerga-dashboard --env-file "$SCRIPT_DIR/dashboard/.env" -p 5000:5000 --restart unless-stopped echerga-dashboard
+    docker run -d --name echerga-dashboard --env-file "$SCRIPT_DIR/dashboard/.env" -p 8081:8081 --restart unless-stopped echerga-dashboard
     echo "✓ Dashboard started!"
-    echo "Access it at: http://localhost:5000"
+    echo "Access it at: http://localhost:8081"
     echo ""
     echo "To stop: docker stop echerga-dashboard"
     echo "To view logs: docker logs -f echerga-dashboard"
@@ -126,5 +126,5 @@ echo "  Every 2 hours:     0 */2 * * *"
 echo "  Every 15 minutes:  */15 * * * *"
 echo ""
 echo "Dashboard:"
-echo "  URL: http://localhost:5000"
+echo "  URL: http://localhost:8081"
 echo "  Status: docker ps | grep echerga-dashboard"
