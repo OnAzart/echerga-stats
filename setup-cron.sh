@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== Echerga Stats - Docker Cron Setup ==="
+echo "=== Echerga Stats - Setup Script ==="
 echo ""
 
 # Check if Docker is installed
@@ -14,19 +14,35 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    echo "Error: .env file not found!"
-    echo "Please create .env file with:"
+# Check if ETL .env file exists
+if [ ! -f "etl/.env" ]; then
+    echo "Error: etl/.env file not found!"
+    echo "Please create etl/.env file with:"
     echo "  SUPABASE_URL=https://xxxxx.supabase.co"
     echo "  SUPABASE_KEY=your-key-here"
     exit 1
 fi
 
-# Build Docker image
-echo "Building Docker image..."
-docker build -t echerga-stats .
-echo "✓ Docker image built successfully"
+# Check if Dashboard .env file exists
+if [ ! -f "dashboard/.env" ]; then
+    echo "Warning: dashboard/.env file not found. Copying from example..."
+    cp dashboard/.env.example dashboard/.env
+    echo "Please edit dashboard/.env with your credentials"
+fi
+
+echo "=== Building Docker Images ==="
+echo ""
+
+# Build ETL image
+echo "Building ETL service..."
+docker build -t echerga-etl ./etl
+echo "✓ ETL Docker image built successfully"
+echo ""
+
+# Build Dashboard image
+echo "Building Dashboard service..."
+docker build -t echerga-dashboard ./dashboard
+echo "✓ Dashboard Docker image built successfully"
 echo ""
 
 # Create log directory
@@ -35,8 +51,8 @@ touch "$LOG_FILE"
 echo "✓ Log file: $LOG_FILE"
 echo ""
 
-# Generate cron command
-CRON_COMMAND="0 * * * * docker run --rm --env-file $SCRIPT_DIR/.env echerga-stats >> $LOG_FILE 2>&1"
+# Generate cron command for ETL
+CRON_COMMAND="0 * * * * docker run --rm --env-file $SCRIPT_DIR/etl/.env --dns 8.8.8.8 echerga-etl >> $LOG_FILE 2>&1"
 
 echo "=== Cron Job Configuration ==="
 echo ""
@@ -76,20 +92,39 @@ else
 fi
 
 echo ""
-echo "=== Test Docker Run ==="
-read -p "Do you want to test the Docker container now? (y/N): " -n 1 -r
+echo "=== Test ETL Docker Run ==="
+read -p "Do you want to test the ETL container now? (y/N): " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "Running test..."
-    docker run --rm --env-file "$SCRIPT_DIR/.env"  --dns 8.8.8.8 echerga-stats
+    echo "Running ETL test..."
+    docker run --rm --env-file "$SCRIPT_DIR/etl/.env" --dns 8.8.8.8 echerga-etl
     echo ""
-    echo "✓ Test completed!"
+    echo "✓ ETL test completed!"
+fi
+
+echo ""
+echo "=== Start Dashboard Service ==="
+read -p "Do you want to start the dashboard now? (y/N): " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Starting dashboard..."
+    docker run -d --name echerga-dashboard --env-file "$SCRIPT_DIR/dashboard/.env" -p 5000:5000 --restart unless-stopped echerga-dashboard
+    echo "✓ Dashboard started!"
+    echo "Access it at: http://localhost:5000"
+    echo ""
+    echo "To stop: docker stop echerga-dashboard"
+    echo "To view logs: docker logs -f echerga-dashboard"
 fi
 
 echo ""
 echo "=== Setup Complete ==="
-echo "Schedule options (edit crontab if you want to change):"
+echo ""
+echo "ETL Cron Schedule options (edit crontab if you want to change):"
 echo "  Every hour:        0 * * * *"
 echo "  Every 30 minutes:  */30 * * * *"
 echo "  Every 2 hours:     0 */2 * * *"
 echo "  Every 15 minutes:  */15 * * * *"
+echo ""
+echo "Dashboard:"
+echo "  URL: http://localhost:5000"
+echo "  Status: docker ps | grep echerga-dashboard"
