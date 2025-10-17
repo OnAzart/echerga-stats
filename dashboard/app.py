@@ -117,6 +117,10 @@ def get_countries():
 def get_checkpoint_heatmap(checkpoint_id):
     """Get heatmap data showing average wait times by day of week and hour"""
     try:
+        # Get timezone offset from request (in minutes)
+        timezone_offset = request.args.get('tz_offset', '0')
+        tz_offset_hours = int(timezone_offset) / -60  # Convert to hours, invert sign
+
         # Get data from last 30 days
         thirty_days_ago = datetime.now() - timedelta(days=30)
 
@@ -136,8 +140,10 @@ def get_checkpoint_heatmap(checkpoint_id):
 
         for measurement in response.data:
             dt = datetime.fromisoformat(measurement['created_at'].replace('Z', '+00:00'))
-            day_of_week = dt.weekday()  # 0=Monday, 6=Sunday
-            hour = dt.hour
+            # Apply timezone offset to convert from UTC to local time
+            local_dt = dt + timedelta(hours=tz_offset_hours)
+            day_of_week = local_dt.weekday()  # 0=Monday, 6=Sunday
+            hour = local_dt.hour
             wait_time = measurement['wait_time']
 
             if wait_time is not None:

@@ -174,11 +174,6 @@ function updateCharts(currentData, previousWeekData) {
 
     // Add previous week data if available
     if (previousWeekData && previousWeekData.length > 0) {
-        const prevLabels = previousWeekData.map(item => {
-            const date = new Date(item.created_at);
-            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-        });
-
         const prevWaitTimes = previousWeekData.map(item => Math.round(item.wait_time / 3600));
         const prevVehicleCounts = previousWeekData.map(item => item.vehicle_in_active_queues_counts);
 
@@ -269,6 +264,12 @@ function updateCharts(currentData, previousWeekData) {
 function updateStatsCards(data) {
     const container = document.getElementById('statsCards');
 
+    // Add defensive checks for empty data
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="text-gray-500">Немає даних для відображення</div>';
+        return;
+    }
+
     const avgWaitTime = Math.round(data.reduce((sum, item) => sum + item.wait_time, 0) / data.length / 3600);
     const maxWaitTime = Math.round(Math.max(...data.map(item => item.wait_time)) / 3600);
     const avgVehicles = Math.round(data.reduce((sum, item) => sum + item.vehicle_in_active_queues_counts, 0) / data.length);
@@ -300,7 +301,9 @@ function showError(message) {
 
 async function loadHeatmap(checkpointId) {
     try {
-        const response = await fetch(`/api/checkpoint/${checkpointId}/heatmap`);
+        // Get timezone offset in minutes
+        const timezoneOffset = new Date().getTimezoneOffset();
+        const response = await fetch(`/api/checkpoint/${checkpointId}/heatmap?tz_offset=${timezoneOffset}`);
         const data = await response.json();
 
         if (data.error) {
