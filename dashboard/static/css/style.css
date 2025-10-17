@@ -79,3 +79,103 @@ canvas {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Heatmap Styles */
+.heatmap-grid {
+    display: table;
+    border-collapse: collapse;
+    margin: 0 auto;
+    font-size: 0.75rem;
+}
+
+.heatmap-row {
+    display: table-row;
+}
+
+.heatmap-cell {
+    display: table-cell;
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    vertical-align: middle;
+}
+
+.heatmap-header {
+    background-color: #f3f4f6;
+    font-weight: 600;
+    color: #374151;
+    position: sticky;
+    z-index: 10;
+}
+
+.heatmap-data {
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-weight: 500;
+}
+
+.heatmap-data:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+.heatmap-green {
+    background-color: #10b981;
+    color: white;
+}
+
+.heatmap-yellow {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.heatmap-red {
+    background-color: #ef4444;
+    color: white;
+}
+
+.heatmap-no-data {
+    background-color: #f9fafb;
+    color: #9ca3af;
+}
+
+.heatmap-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #d1d5db;
+}
+
+/* Mobile responsiveness for heatmap */
+@media (max-width: 768px) {
+    .heatmap-cell {
+        padding: 0.25rem;
+        min-width: 2rem;
+        min-height: 2rem;
+        font-size: 0.65rem;
+    }
+
+    .heatmap-legend {
+        font-size: 0.75rem;
+    }
+}
