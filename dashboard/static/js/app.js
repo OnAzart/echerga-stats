@@ -145,13 +145,38 @@ async function loadCheckpointData() {
 }
 
 function updateCharts(currentData, previousWeekData) {
-    const labels = currentData.map(item => {
-        const date = new Date(item.created_at);
-        return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-    });
+    // For previous week comparison, we want to show full day data
+    // Use the longer dataset (previous week) for labels if available
+    let labels;
+    let useExtendedLabels = false;
 
+    if (previousWeekData && previousWeekData.length > currentData.length) {
+        // Previous week has more data points - use it for labels
+        labels = previousWeekData.map(item => {
+            const date = new Date(item.created_at);
+            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        });
+        useExtendedLabels = true;
+    } else {
+        // Use current data labels
+        labels = currentData.map(item => {
+            const date = new Date(item.created_at);
+            return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        });
+    }
+
+    // Prepare current day data - pad with null if needed
     const waitTimes = currentData.map(item => Math.round(item.wait_time / 3600)); // Convert to hours
     const vehicleCounts = currentData.map(item => item.vehicle_in_active_queues_counts);
+
+    // Pad current data with nulls if previous week has more points
+    if (useExtendedLabels) {
+        const paddingLength = labels.length - currentData.length;
+        for (let i = 0; i < paddingLength; i++) {
+            waitTimes.push(null);
+            vehicleCounts.push(null);
+        }
+    }
 
     // Prepare datasets
     const waitTimeDatasets = [{
@@ -161,7 +186,8 @@ function updateCharts(currentData, previousWeekData) {
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4,
         fill: true,
-        borderWidth: 2
+        borderWidth: 2,
+        spanGaps: false  // Don't connect gaps
     }];
 
     const vehicleDatasets = [{
@@ -174,8 +200,17 @@ function updateCharts(currentData, previousWeekData) {
 
     // Add previous week data if available
     if (previousWeekData && previousWeekData.length > 0) {
-        const prevWaitTimes = previousWeekData.map(item => Math.round(item.wait_time / 3600));
-        const prevVehicleCounts = previousWeekData.map(item => item.vehicle_in_active_queues_counts);
+        let prevWaitTimes = previousWeekData.map(item => Math.round(item.wait_time / 3600));
+        let prevVehicleCounts = previousWeekData.map(item => item.vehicle_in_active_queues_counts);
+
+        // Pad previous week data if current day has more points (edge case)
+        if (!useExtendedLabels && currentData.length > previousWeekData.length) {
+            const paddingLength = currentData.length - previousWeekData.length;
+            for (let i = 0; i < paddingLength; i++) {
+                prevWaitTimes.push(null);
+                prevVehicleCounts.push(null);
+            }
+        }
 
         waitTimeDatasets.push({
             label: 'Минулого тижня',
