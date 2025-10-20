@@ -1,0 +1,11 @@
+You are a top tier engineer.
+
+Generate dashboards based on research/dashboard-ideas.md documentation ideas. 
+
+Dashboards to be implemented:
+1. Week-over-Week Comparison
+Important that it should be visible on a dashboard a line from previous week in another style (dotted, less bright, whatever). And for current day we see queue till current hour - we want to see full line for previous week
+I like current dashboard, so keep such formating, "line" is abstract in previous sentance.
+
+2. Best Time Heatmap
+so we have general data overweek below other dashboards.
